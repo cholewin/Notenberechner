@@ -1,0 +1,56 @@
+import streamlit as st
+import pandas as pd
+
+st.set_page_config(page_title="Notenrechner", layout="wide")
+
+st.title("📊 Notenrechner für Schüler")
+st.write("Trage deine Noten ein und sieh deine **voraussichtliche Gesamtnote**.")
+
+# Anfangsdaten
+faecher = ["Mathe", "Deutsch", "Englisch"]
+
+data = {
+    "Fach": faecher,
+    "Klassenarbeit 1": [0, 0, 0],
+    "Klassenarbeit 2": [0, 0, 0],
+    "Mündliche Note": [0, 0, 0],
+    "Referat": [0, 0, 0],
+}
+
+df = pd.DataFrame(data)
+
+# Tabelle anzeigen und bearbeiten lassen
+edited_df = st.data_editor(
+    df,
+    num_rows="fixed",
+    use_container_width=True
+)
+
+st.divider()
+
+if st.button("📐 Gesamtnoten berechnen"):
+    result_df = edited_df.copy()
+
+    def berechne_note(row):
+        if (
+            row["Klassenarbeit 1"] == 0
+            or row["Klassenarbeit 2"] == 0
+            or row["Mündliche Note"] == 0
+            or row["Referat"] == 0
+        ):
+            return "-"
+        
+        klassenarbeiten = (row["Klassenarbeit 1"] + row["Klassenarbeit 2"]) / 2
+
+        gesamt = (
+            klassenarbeiten * 0.4 +
+            row["Mündliche Note"] * 0.5 +
+            row["Referat"] * 0.1
+        )
+
+        return round(gesamt, 2)
+
+    result_df["Gesamtnote"] = result_df.apply(berechne_note, axis=1)
+
+    st.subheader("✅ Ergebnisse")
+    st.dataframe(result_df, use_container_width=True)
